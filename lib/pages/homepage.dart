@@ -9,6 +9,7 @@ import 'package:velocity_x/velocity_x.dart';
 // import 'package:musicify/assets/radio.json';
 import 'package:musicify/models/radio.dart';
 import 'package:musicify/utils/ai_util.dart';
+import 'package:alan_voice/alan_voice.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -20,7 +21,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<MyRadio>? radios;
   MyRadio? _selectedRadio;
-  Color? _selectedColor;
+  late Color _selectedColor;
   bool _isPlaying = false;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -28,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    setupAlan();
     fetchRadios();
     _audioPlayer.onPlayerStateChanged.listen((event) {
       if (event == PlayerState.PLAYING) {
@@ -39,9 +41,73 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  setupAlan() {
+    AlanVoice.addButton(
+        "1bfa43addb01707eabc387f48669f2e12e956eca572e1d8b807a3e2338fdd0dc/stage",
+        buttonAlign: AlanVoice.BUTTON_ALIGN_LEFT);
+
+    AlanVoice.callbacks.add((command) => _handleCommand(command.data));
+  }
+
+  _handleCommand(Map<String, dynamic> response) {
+    switch (response["command"]) {
+      case "play":
+        playMusic(_selectedRadio!.url);
+        break;
+
+      case "play_channel":
+        final id = response["id"];
+        // _audioPlayer.pause();
+        MyRadio newRadio = radios!.firstWhere((element) => element.id == id);
+        radios!.remove(newRadio);
+        radios!.insert(0, newRadio);
+        playMusic(newRadio.url);
+        break;
+
+      case "stop":
+        _audioPlayer.stop();
+        break;
+      case "next":
+        final index = _selectedRadio!.id;
+        MyRadio newRadio;
+        if (index + 1 > radios!.length) {
+          newRadio = radios!.firstWhere((element) => element.id == 1);
+          radios!.remove(newRadio);
+          radios!.insert(0, newRadio);
+        } else {
+          newRadio = radios!.firstWhere((element) => element.id == index + 1);
+          radios!.remove(newRadio);
+          radios!.insert(0, newRadio);
+        }
+        playMusic(newRadio.url);
+        break;
+
+      case "prev":
+        final index = _selectedRadio!.id;
+        MyRadio newRadio;
+        if (index - 1 <= 0) {
+          newRadio = radios!.firstWhere((element) => element.id == 1);
+          radios!.remove(newRadio);
+          radios!.insert(0, newRadio);
+        } else {
+          newRadio = radios!.firstWhere((element) => element.id == index - 1);
+          radios!.remove(newRadio);
+          radios!.insert(0, newRadio);
+        }
+        playMusic(newRadio.url);
+        break;
+      default:
+        print("Command was ${response["command"]}");
+        break;
+    }
+  }
+
   fetchRadios() async {
     final radioJson = await rootBundle.loadString("assets/radio.json");
     radios = MyRadioList.fromJson(radioJson).radios;
+    _selectedRadio = radios![0];
+    _selectedColor = Color(int.parse(_selectedRadio!.color));
+    print(radios);
     setState(() {});
   }
 
@@ -80,6 +146,12 @@ class _HomePageState extends State<HomePage> {
               ? VxSwiper.builder(
                   itemCount: radios!.length,
                   enlargeCenterPage: true,
+                  onPageChanged: (index) {
+                    _selectedRadio = radios![index];
+                    late final colorHex = radios![index].color;
+                    _selectedColor = Color(int.parse(colorHex));
+                    setState(() {});
+                  },
                   itemBuilder: (context, index) {
                     final rad = radios![index];
                     return VxBox(
@@ -149,6 +221,7 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.white,
                   ),
                 ),
+          SizedBox(),
           Align(
             alignment: Alignment.bottomCenter,
             child: [

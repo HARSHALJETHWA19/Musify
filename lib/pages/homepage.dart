@@ -465,7 +465,7 @@ class _HomePageState extends State<HomePage> {
               .make(),
           [
             AppBar(
-              title: "AI Radio".text.xl4.bold.white.make().shimmer(
+              title: "Musify".text.xl4.bold.white.make().shimmer(
                   primaryColor: Color.fromARGB(255, 180, 221, 254),
                   secondaryColor: Color.fromARGB(255, 88, 168, 131)),
               backgroundColor: Colors.transparent,

@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:musicify/welcome.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 // import 'package:musicify/assets/radio.json';
@@ -604,7 +605,7 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SignUpScreen()));
+                            builder: (context) => WelcomeScreen()));
                   });
                 }),
           ),
